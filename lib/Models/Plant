@@ -1,0 +1,15 @@
+import 'package:flutter/material.dart';
+class Plant{
+  String name;
+  int interval;
+  DateTime lastWater;
+  String imageURL;
+
+  Plant({
+    required this.name, 
+    required this.interval, 
+    required this.lastWater, 
+    required this.imageURL
+  });
+
+}

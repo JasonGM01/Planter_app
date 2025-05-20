@@ -1,0 +1,117 @@
+import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:planter_app/Models/Plant';
+
+class AddEditScreen extends StatefulWidget{
+  final Plant? plant;
+  AddEditScreen({this.plant});
+
+  @override
+  _AddEditScreenState createState() => _AddEditScreenState();
+}
+
+class _AddEditScreenState extends State<AddEditScreen>{
+  late TextEditingController plantNameController;
+  late TextEditingController plantWaterFrequencyController;
+  File? _image;
+  final _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    plantNameController = TextEditingController(text: widget.plant?.name ?? '');
+    plantWaterFrequencyController = TextEditingController(text: widget.plant?.interval?.toString() ?? '',);
+    if (widget.plant?.imageURL != null && widget.plant!.imageURL.isNotEmpty){
+      _image = File(widget.plant!.imageURL);
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null){
+      setState((){
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  Future<void> _takePhoto() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.camera);
+    if (pickedFile != null){
+      setState((){
+        _image = File(pickedFile.path);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context){
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(widget.plant == null ? 'Add Plant' : 'Edit Plant'),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(16),
+        child: Form(
+          key: _formKey,
+          child: Column(
+          children: [
+            TextFormField(
+              controller: plantNameController,
+              decoration: InputDecoration(labelText: 'Plant Name'),
+            ),
+            SizedBox(height: 10),
+            TextFormField(
+              controller: plantWaterFrequencyController,
+              decoration: InputDecoration(labelText: 'Watering Frequency (days)'),
+              keyboardType: TextInputType.number,
+            ),
+            SizedBox(height: 20),
+            _image == null
+            ? Text('No image selected')
+            : Image.file(
+              _image!,
+              width: 100,
+              height: 100,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children:[
+                ElevatedButton(
+                  onPressed: _pickImage,
+                  child: Text('Pick image'),
+                ),
+                SizedBox(width:16),
+                ElevatedButton(
+                  onPressed: _takePhoto,
+                  child: Text('Take photo'),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState?.validate() ?? false){
+                final plantData = <String,String>{
+                  'name': plantNameController.text.isNotEmpty
+                    ? plantNameController.text
+                    : widget.plant?.name?? '',
+                  'interval': plantWaterFrequencyController.text.isNotEmpty
+                    ? plantWaterFrequencyController.text
+                    : widget.plant?.interval?.toString() ?? '',
+                  'image': _image?.path ?? widget.plant?.imageURL ?? '',
+                };
+                Navigator.pop(context, plantData);
+                }
+              },
+              child: Text('Save Plant'),
+            ),
+          ],
+        ),
+      ),
+      ),
+    );
+  }
+}
